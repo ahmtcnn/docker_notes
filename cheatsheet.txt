@@ -1,0 +1,204 @@
+Docker temel iki parçadan oluşmaktadır. Birincisi Linux Kernel’la direkt iletişim halinde olan Docker Daemon, ikincisi ise 
+bu Daemon (Motor) ile iletişim kurmamıza olanak tanıyan Docker CLI (Command-Line Interface)’dır. Linux’ta hem Docker Daemon 
+hem de Docker CLI doğal olarak direkt Linux üzerinde koşmaktadır. 
+
+Windows ve Mac OS X’te ise Docker CLI Windows ve Mac OS X işletim sistemleri üzerinde koşmakta, Docker Daemon ise bu işletim
+sistemlerinde bir Hypervisor (duruma göre VMware, VirtualBox, Hyperkit, Hyper-V) yardımıyla çalıştırılan Linux üzerinde 
+koşmaktadır.
+
+Windows ve Mac OS X’te (konfigüratif olarak aynı zamanda Linux’ta da) Docker CLI ve Docker Daemon TCP ile haberleşmektedirler.
+
+Container
+Docker Daemon tarafından Linux çekirdeği içerisinde birbirinden izole olarak çalıştırılan process’lerin her birine verilen isimdir.
+Virtual Machine (Sanal Makina) analojisinde Docker’ı Hypervisor’e benzetirsek fiziksel sunucu üzerinde halihazırda koşturulmakta olan 
+her bir işletim sisteminin (sanal sunucunun) Docker’daki karşılığı Container’dır. Container’lar milisaniyeler içerisinde başlatılabilir, 
+istenen herhangi bir anda duraklatılabilir (Pause), tamamen durdurulabilir (Stop) ve yeniden başlatılabilirler.
+
+Image ve Dockerfile
+Docker Daemon ile çalıştırılacak Container’ların baz alacağı işletim sistemi veya başka Image’ı, dosya sisteminin yapısı ve içerisindeki 
+dosyaları, koşturacağı programı (veya bazen çok tercih edilmemekle birlikte programları) belirleyen ve içeriği metin bazlı bir Dockerfile 
+(yazımı tam olarak böyle, ne dockerfile ne DockerFile ne de DOCKERFILE) ile belirlenen binary’ye verilen isimdir.
+
+Docker Daemon (Docker Engine)
+Docker ekosistemindeki Hypervisor’ün tam olarak karşılığıdır. Linux Kernel’inde bulunan LXC’nin yerini almıştır. İşlevi Container’ların 
+birbirlerinden izole bir şekilde, Image’larda tanımlarının yapıldığı gibi çalışmaları için gerekli yardım ve yataklığı yani ortamı 
+sağlamaktır. Container’ın bütün yaşam döngüsünü, dosya sistemini, verilen CPU ve RAM sınırlamaları ile çalışması vb bütün karmaşık 
+(işletim sistemine yakın seviyelerdeki) işlerin halledildiği bölümdür.
+
+Docker CLI (Command-Line Interface) - Docker İstemcisi
+Kullanıcının Docker Daemon ile konuşabilmesi için gerekli komut setini sağlar. Registry’den yeni bir Image indirilmesi, Image’dan yeni bir 
+Container ayağa kaldırılması, çalışan Container’ın durdurulması, yeniden başlatılması, Container’lara işlemci ve RAM sınırlarının atanması 
+vb komutların kullanıcıdan alınarak Docker Daemon’e teslim edilmesinden sorumludur.
+
+Docker Registry
+DockerHub
+
+
+
+apt-get install docker.io
+systemctl start docker
+
+docker version
+
+docker pull hello-world
+docker run hello-world
+
+docker images
+
+docker ps -> only running containers
+
+Çalıştırılan koşan ve çıkış (exit) yapan Container’ları görmek için "docker ps -a" komutunu kullanabiliriz, kullanalım ve çıktıya bakalım.
+
+Container ile ilgili daha detaylı bilgileri docker inspect <container_id> yani örneğimizde docker inspect e139e975009f komutu ile öğrenebiliriz
+
+docker start -a <container-id> -> kapanan containeri tekrar böyle baslatabiliriz. -a parametresi bunu baslatirken terminali attach et anlamina gelir
+
+
+docker start -a e139e975009f
+
+yani docker start <container-id> de denilebilir.
+
+-a parametresi stop durumda olan Container’ın tekrar başlatılırken terminal’in (komut satırı input/output’unun) Container’a tekrar attach edilmesinin 
+(bağlanmasının) istendiğini belirtmektedir.
+
+Detached modda çalışan Container’ların çıktıları docker logs <container_id> komutu ile görülebilir. 
+
+eger detached modda calisiyorsa terminale cikti veremeyecek haliyle
+
+ciktilarini gormek istiyorsan docker logs <container-id>
+
+docker rm <container-id> ile cikis yapmis containeri silebiliriz
+
+docker rm -f <container-id> ile cikis yapmadiysa bile zorlayabiliriz.
+
+docker rm <container_id> komutu ile çıkış yapmış Container’lar silinebilir.
+
+docker rm -f <container_id> komutu ile yani -f Force parametresi ile bir Container çalışır durumda bile olsa onu silebiliriz. 
+
+Force opsiyonunu kullanmak yerine önce docker stop <container_id> ile Container’ı durdurmayı da seçebiliriz.
+
+İşte Docker mucizesi yine tam da burada karşımıza çıkmaktadır. Official Nginx Image’ını hazırlayan arkadaşlar Nginx’i default olarak 80 
+numaralı portu dinlemeye ve bu porta gelen web isteklerini test web sitesine yönlendirmeye dolayısıyla da test ana sayfasını sunmak üzere 
+ayarlamıştır. 
+
+docker exec -it <container_id> /bin/bash komutu ile Container’a bir Bash Shell açabiliriz. 
+
+-i interaktif terminali -t ise terminalin attach olmasını istediğimizi belirtir.
+
+Container’ın Bash’inde iken ps -ef komutunu verin ve Container içinde çalışan bütün process’leri listeleyin.
+
+Nginx Container’ı terminal’e Attached bir şekilde ayağa kalktı. Bu çoğu zaman istenen durum değildir. -d parametresi ile Container’ı 
+Detached modda çalıştırabilir ve terminali bloklanmaktan kurtarabiliriz. 
+
+docker kill <container_id> komutu ile de Container’ı acil çıkışa zorlayabiliriz.
+
+Linux Containers (LXC) kullanarak daha az maliyetli, daha performanslı ve daha az down-time’lı bir hizmet sunuyor. İnsanlar Solomon’a nasıl 
+yaptıklarını sorunca Solomon, Linux Kernel’indeki Container desteğinin pek bilinmediği, bilinse bile etkili kullanılamadığı sonucunu 
+çıkarıyor ve yaptıkları kurmaylar toplantısında LXC’yi halka indirmeye karar veriyorlar.
+
+Docker-Compose geliştirici ortamının yapısını metin tabanlı olarak tutar ve tek bir komutla docker-compose up geliştirici ortamını geliştiricinin 
+çalışmasına hazır hale getirebilmektedir.
+
+docker pause <container_id>
+docker unpause <container_id>
+docker stop <container_id>
+docker start <container_id>
+docker rm <container_id>
+docker rm -v <container_id> ilişkili volume ler ile birlikte kaldırır
+docker rm -f <container_id> zorlayarak kaldırır. Çalışan bir container ancak böyle kaldırılır.
+docker inspect <container_id> İlgili Container’la ilgili detaylı bilgiler verir
+docker rm $(docker ps -aq)  tüm containerları kaldırır
+docker stop $(docker ps -aq) tüm containerları durdurur
+
+docker rmi <image_id|image_name>
+docker rmi -f <image_id|image_name>
+docker inspect <image_id|image_name> İlgili Image’la ilgili detaylı bilgiler verir
+docker rmi $(docker images -aq) - tüm image ları siler
+
+docker info - Docker Daemon’la ilgili özet bilgiler verir
+
+docker logs <container_id> İlgili Container’ın terminalinde o ana kadar oluşan çıktıyı gösterir
+
+docker logs -f <container_id> İlgili Container’ın terminalinde o ana kadar oluşan çıktıyı gösterir ve -f follow parametresi ile o andan sonra oluşan logları da göstermeye devam eder
+
+docker exec <container_id> <command>
+
+docker exec -it <container_id> /bin/bash
+
+docker attach <container_id> Önceden detached modda -d başlatılan bir Container’a attach olmak için kullanılır
+
+
+Basit Image Hazırlama ve DockerHub’a Push Etme
+Yeni bir Image oluşturmak çok basittir. Yeni Image’ın nasıl oluşturulacağını özetleyen Dockerfile bir klasöre konulur ve terminalde bu 
+klasöre gidilerek docker build . komutu çalıştırılır. Oluşan Image docker images komutu ile görülebilir.
+
+Dockerfile dosyası oluşturduk
+
+FROM ubuntu:latest
+
+MAINTAINER ahmetcan karaagacli <ahmetcankaraagaclii@gmail.com>
+
+diyerek kaydettik ve "docker build ." ile build ettik
+
+docker images ile baktığımızda bu imajı tag ve reposu <none> olarak gördük.
+daha sonra tag ve repo ekledik >
+
+docker tag eee(id) ahmtcn/myubuntu:0.1
+
+
+aslında bu değerleri build ederken verebiliyoruz > "docker build -t ahmtcn/myubuntu:0.1 ."
+
+Şimdide bu imaj ile merhaba ubuntu yazdıran bir container ayağa kaldıralım.
+
+docker run ahmtcn/myubuntu:0.1 echo "Ubuntu'dan Merhaba Docker"
+
+Şimdi dockerhub a imagı atcaz
+
+docker login komutunu vererek önce Docker Hub ID’nizi sonra da şifrenizi vererek kimliğinizi doğrulayıp login işlemini tamamlayın.
+
+docker push ahmtcn/myubuntu:0.1
+
+Dockerfile’ın Yapısı ve Instruction’ları
+Dockerfile metin bazlı fakat YAML, JSON, XML tarzı herhangi bir serializasyon formatı içermeyen satır bazlı olarak Instruction’ları (komut) 
+ayıran bir dosyadır. Genel olarak Instruction’ların formatı aşağıdaki gibidir. # ile başlayan bütün satırlar yorum olarak değerlendirilmektedir.
+
+ADD
+
+Oluşturacağımız Image’e Host dosya sisteminden veya internetten yeni bir dosya/klasör eklemek için kullanılır ADD komutu.
+ADD <src>... <dest>
+ADD ["<src>",... "<dest>"]
+
+Host’tan Image’a klasör kopyalanması
+ADD [ "./BuildDir/", "/app/bin"]
+
+İnternetten Image’a dosya kopyalanması
+ADD [ "https://curl.haxx.se/download/curl-7.50.1.tar.gz", "/tmp/curl.tar.gz" ]
+
+Host klasörde bulunan ve Image’a kopyalanmak istenmeyen dosyalar .dockerignore dosyasının içinde belirtilebilir. Bu dosya tıplı .gitignore‘a benzemektedir.
+
+COPY
+ADD komutu ile aynı şekilde kullanılır fakat İnternetten dosya indiremez sadece Host üzerindeki dosya ve klasörleri kopyalayabilir.
+docker run -p 8080:80 nginx:1.10 -> 8080 e gelen istekleri container icindeki nginx in 80 portuna ilet demek
+
+
+WORKDIR
+WORKDIR Instruction’ı kendisinden sonra gelen RUN, CMD, ENTRYPOINT, COPY and ADD Instruction’larını etkiler ve bu Instruction’lar Daemon 
+tarafından koşturulurken relatif olarak kullanılan path’lerin başına bu Instruction’la sağlanan path’i ekler. 
+
+WORKDIR /app/src
+ADD [ "./BuildDir/", "binaries/"]
+
+/app/src Container’da WORKDIR olarak belirlendikten sonra ADD Instruction’ı ile Host üzerindeki ./BuildDir/ klasörünün altındaki bütün 
+dosyalar binaries klasörü altına kopyalanmak istenmektedir. WORKDIR olarak /app/src sağlandığı için dosyalar Host’tan /app/src/binaries 
+klasörü altına kopyalanacaklardır.
+
+bekchy 010203
+
+
+
+docker exec -it <container-id> /bin/bash -> diyerek containera bir bash shell acabiliriz. -i interactif shell oldugunu, t ise terminalin attach olmasini istedigimizi söyluyoruz.
+
+	> ps -ef diyerek containerda calisan tum processleri gorebiliriz
+
+	>more /etc/nginx/nginx.conf a baktigimizda baska bir config dosyasini görüyoruz > /etc/nginx/conf.d/default.conf
+
